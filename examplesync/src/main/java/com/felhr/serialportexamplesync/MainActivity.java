@@ -80,11 +80,9 @@ public class MainActivity extends AppCompatActivity {
     };
     private String TAG = "Niranjan";
     private String design_file;
-    private int total_lines=0;
+    private boolean conencted = false;
     private MyAsyn task;
-    private Button BtnPause;
     private Button runButton;
-    private boolean CTS_line = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -323,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case UsbService.CTS_CHANGE:
                     Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
-                    mActivity.get().CTS_line = true;
+//                    mActivity.get().CTS_line = true;
                     break;
                 case UsbService.DSR_CHANGE:
                     Toast.makeText(mActivity.get(), "DSR_CHANGE",Toast.LENGTH_LONG).show();
@@ -344,9 +342,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Integer... params) {
-            counter = 2;
+            counter = 0;
 
-            while (resume) {
+            while (resume && usbService!=null ) {
                 // --- show progress in text field --
                 publishProgress(counter);
                 if(lines.size()==0){
@@ -368,7 +366,12 @@ public class MainActivity extends AppCompatActivity {
                         for (int h = 0; h < bytes.length / 4; h = h + 3) {
                             System.arraycopy(bytes, h, bytes_to_send, 0, 3);
                             usbService.write(bytes_to_send);
-                            CTS_line = false;
+//                            try {
+//                                Thread.sleep(10);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                            CTS_line = false;
                         }
                     }
 
