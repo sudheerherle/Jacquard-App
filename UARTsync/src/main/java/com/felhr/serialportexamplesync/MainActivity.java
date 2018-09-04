@@ -22,6 +22,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -81,8 +82,9 @@ public class MainActivity extends AppCompatActivity {
     private String TAG = "Niranjan";
     private String design_file;
     private boolean conencted = false;
-    private MyAsyn task;
-    private Button runButton;
+    public MyAsyn task;
+    private Button runButton, StopButton;
+//    private boolean CTS_line = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mHandler = new MyHandler(this);
         runButton = (Button) findViewById(R.id.btnRun);
+        StopButton = (Button) findViewById(R.id.btnStop);
         label = (TextView) findViewById(R.id.fileAttributesLabel);
         currentCardLbl = (TextView) findViewById(R.id.currentcardTxt);
         Button choosefileButton = (Button) findViewById(R.id.choosefileBtn);
@@ -100,6 +103,14 @@ public class MainActivity extends AppCompatActivity {
                 if(task!=null){
                     task.weaveUp();
                 }
+            }
+        });
+
+        StopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                task = null;
+                currentCardLbl.setText("STOPPED");
             }
         });
 
@@ -152,24 +163,22 @@ public class MainActivity extends AppCompatActivity {
                             // --- create a new task --
                             task = new MyAsyn();
                             task.execute(100);
-                            runButton.setText("PAUSE");
+                            currentCardLbl.setText("Current card = "+ task.counter);
                         }
                         else if(task.getStatus() == AsyncTask.Status.FINISHED){
                             // --- the task finished, so start another one --
                             task = new MyAsyn();
                             task.execute(100);
-                            runButton.setText("PAUSE");
+                            currentCardLbl.setText("Current card = "+ task.counter);
                         }
-                        else if(task.getStatus() == AsyncTask.Status.RUNNING && !task.getPause()){
-                            // --- the task is running, call pause function --
-                            task.pauseMyTask();
-                            runButton.setText("RUN");
-                        }
-                        else {
-                            // --- task paused, so wake up him --
-                            task.wakeUp();
-                            runButton.setText("PAUSE");
-                        }
+//                        else if(task.getStatus() == AsyncTask.Status.RUNNING && !task.getPause()){
+//                            // --- the task is running, call pause function --
+//                            task.pauseMyTask();
+//                        }
+//                        else {
+//                            // --- task paused, so wake up him --
+//                            task.wakeUp();
+//                        }
 
                 }
             });
@@ -219,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 String pa = design_file.substring(design_file.lastIndexOf("/")+1,design_file.length());
-                                label.setText(String.format("File name = %s\nTotal cards = %d", pa,lines.size()));
+                                label.setText(String.format("File name = %s \t Total cards = %d", pa,lines.size()));
                             }
                         });
                     } catch (FileNotFoundException e) {
@@ -317,19 +326,22 @@ public class MainActivity extends AppCompatActivity {
             switch (msg.what) {
                 case UsbService.MESSAGE_FROM_SERIAL_PORT:
                     String data = (String) msg.obj;
-                    Toast.makeText(mActivity.get(), "Data recieved: "+data,Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(mActivity.get(), "Data recieved: "+data,Toast.LENGTH_SHORT).show();
                     break;
                 case UsbService.CTS_CHANGE:
-                    Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
+//                    Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_SHORT).show();
 //                    mActivity.get().CTS_line = true;
+                    if(this.mActivity.get().task!=null){
+                        this.mActivity.get().task.wakeUp();
+                    }
                     break;
                 case UsbService.DSR_CHANGE:
                     Toast.makeText(mActivity.get(), "DSR_CHANGE",Toast.LENGTH_LONG).show();
                     break;
-                case UsbService.SYNC_READ:
-                    String buffer = (String) msg.obj;
-                    Toast.makeText(mActivity.get(), "Sync Data recieved: "+buffer,Toast.LENGTH_SHORT).show();
-                    break;
+//                case UsbService.SYNC_READ:
+//                    String buffer = (String) msg.obj;
+//                    Toast.makeText(mActivity.get(), "Sync Data recieved: "+buffer,Toast.LENGTH_SHORT).show();
+//                    break;
             }
         }
     }
@@ -344,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
         protected Void doInBackground(Integer... params) {
             counter = 0;
 
-            while (resume && usbService!=null ) {
+            while (resume && usbService!=null) {
                 // --- show progress in text field --
                 publishProgress(counter);
                 if(lines.size()==0){
@@ -363,16 +375,19 @@ public class MainActivity extends AppCompatActivity {
                     }else {
                         bytes = lines.get(counter).getBytes();
                         if (bytes == null) return null;
-                        for (int h = 0; h < bytes.length / 4; h = h + 3) {
-                            System.arraycopy(bytes, h, bytes_to_send, 0, 3);
-                            usbService.write(bytes_to_send);
+//                        for (int h = 0; h < bytes.length / 4; h = h + 3) {
+//                            System.arraycopy(bytes, h, bytes_to_send, 0, 3);
+
+                                usbService.write(bytes);
+                                pause = true;
+
 //                            try {
 //                                Thread.sleep(10);
 //                            } catch (InterruptedException e) {
 //                                e.printStackTrace();
 //                            }
-//                            CTS_line = false;
-                        }
+
+//                        }
                     }
 
 
@@ -380,6 +395,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // --- when the counter reaches the end, change the loop flag --
                 resume = (counter++ == lines.size()-1) ? false : true;
+                publishProgress(counter);
                 try {
                     // --- put here any time expensive code --
                     Thread.sleep(50);

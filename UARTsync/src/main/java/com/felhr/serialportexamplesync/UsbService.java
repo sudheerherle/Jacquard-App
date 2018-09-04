@@ -36,9 +36,8 @@ public class UsbService extends Service {
     public static final int MESSAGE_FROM_SERIAL_PORT = 0;
     public static final int CTS_CHANGE = 1;
     public static final int DSR_CHANGE = 2;
-    public static final int SYNC_READ = 3;
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
-    private static final int BAUD_RATE = 9600; // BaudRate. Change this value if you need
+    private static final int BAUD_RATE = 115200; // BaudRate. Change this value if you need
     public static boolean SERVICE_CONNECTED = false;
 
     private IBinder binder = new UsbBinder();
@@ -75,7 +74,7 @@ public class UsbService extends Service {
     private UsbSerialInterface.UsbCTSCallback ctsCallback = new UsbSerialInterface.UsbCTSCallback() {
         @Override
         public void onCTSChanged(boolean state) {
-            if(mHandler != null)
+            if(mHandler != null && !state)
                 mHandler.obtainMessage(CTS_CHANGE).sendToTarget();
         }
     };
@@ -118,7 +117,7 @@ public class UsbService extends Service {
                 Intent intent = new Intent(ACTION_USB_DISCONNECTED);
                 arg0.sendBroadcast(intent);
                 if (serialPortConnected) {
-                    serialPort.syncClose();
+                    serialPort.close();
                 }
                 serialPortConnected = false;
             }
@@ -164,16 +163,7 @@ public class UsbService extends Service {
      */
     public void write(byte[] data) {
         if (serialPort != null)
-            serialPort.syncWrite(data, 0);
-    }
-
-    /*
-     * This function will be called from MainActivity to change baud rate
-     */
-
-    public void changeBaudRate(int baudRate){
-        if(serialPort != null)
-            serialPort.setBaudRate(baudRate);
+            serialPort.write(data);
     }
 
     public void setHandler(Handler mHandler) {
@@ -190,7 +180,8 @@ public class UsbService extends Service {
                 int deviceVID = device.getVendorId();
                 int devicePID = device.getProductId();
 
-                if (deviceVID != 0x1d6b && (devicePID != 0x0001 && devicePID != 0x0002 && devicePID != 0x0003)) {
+                if (deviceVID != 0x1d6b && (devicePID != 0x0001 && devicePID != 0x0002 && devicePID != 0x0003) && deviceVID != 0x5c6 && devicePID != 0x904c) {
+              
                     // There is a device connected to our Android device. Try to open it as a Serial Port.
                     requestUserPermission();
                     keep = false;
@@ -245,7 +236,7 @@ public class UsbService extends Service {
         public void run() {
             serialPort = UsbSerialDevice.createUsbSerialDevice(device, connection);
             if (serialPort != null) {
-                if (serialPort.syncOpen()) {
+                if (serialPort.open()) {
                     serialPortConnected = true;
                     serialPort.setBaudRate(BAUD_RATE);
                     serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
@@ -261,14 +252,12 @@ public class UsbService extends Service {
                     serialPort.read(mCallback);
                     serialPort.getCTS(ctsCallback);
                     serialPort.getDSR(dsrCallback);
-
-                    new ReadThread().start();
-
+                    
                     //
-                    // Some Arduinos would need some sleep because firmware wait some time to know whether a new sketch is going
+                    // Some Arduinos would need some sleep because firmware wait some time to know whether a new sketch is going 
                     // to be uploaded or not
                     //Thread.sleep(2000); // sleep some. YMMV with different chips.
-
+                    
                     // Everything went as expected. Send an intent to MainActivity
                     Intent intent = new Intent(ACTION_USB_READY);
                     context.sendBroadcast(intent);
@@ -290,20 +279,4 @@ public class UsbService extends Service {
             }
         }
     }
-
-    private class ReadThread extends Thread {
-        @Override
-        public void run() {
-            while(true){
-                byte[] buffer = new byte[100];
-                int n = serialPort.syncRead(buffer, 0);
-                if(n > 0) {
-                    byte[] received = new byte[n];
-                    System.arraycopy(buffer, 0, received, 0, n);
-                    String receivedStr = new String(received);
-                    mHandler.obtainMessage(SYNC_READ, receivedStr).sendToTarget();
-                }
-            }
-        }
-    }
-
+}

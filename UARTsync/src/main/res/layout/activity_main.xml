@@ -1,0 +1,95 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@mipmap/ic_launcher_foreground"
+    android:clipToPadding="true"
+    android:forceHasOverlappingRendering="true"
+    android:foregroundGravity="fill_vertical|center_horizontal|fill_horizontal|center|fill"
+    android:foregroundTintMode="src_over"
+    android:paddingBottom="16dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="16dp"
+    tools:context="com.felhr.serialportexamplesync.MainActivity">
+
+    <Button
+        android:id="@+id/choosefileBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Choose design file" />
+
+    <TextView
+        android:id="@+id/fileAttributesLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:gravity="center"
+        android:text="File attributes:" />
+
+    <TextView
+        android:id="@+id/currentcardTxt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/fileAttributesLabel"
+        android:gravity="center"
+        android:text="Current card = 0"
+        android:textColor="@android:color/holo_blue_dark"
+        android:textSize="36sp"
+        android:textStyle="bold" />
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:columnCount="2"
+        android:foregroundGravity="bottom|center_horizontal|fill_horizontal|center"
+        android:orientation="horizontal"
+        android:rowCount="2">
+
+        <Button
+            android:id="@+id/btnRun"
+            android:layout_width="125dp"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_gravity="top|left"
+            android:layout_row="0"
+            android:drawableLeft="@drawable/ic_run"
+            android:text="RUN" />
+
+        <Button
+            android:id="@+id/btnStop"
+            android:layout_width="125dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_column="0"
+            android:layout_gravity="bottom|left"
+            android:layout_row="1"
+            android:drawableLeft="@drawable/ic_stop"
+            android:text="STOP" />
+
+        <Button
+            android:id="@+id/BtnWeaveDown"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_column="1"
+            android:layout_gravity="bottom|right"
+            android:layout_row="1"
+            android:drawableLeft="@drawable/ic_down"
+            android:text="WEAVE DOWN" />
+
+        <Button
+            android:id="@+id/BtnWeaveUp"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_column="1"
+            android:layout_gravity="right"
+            android:layout_row="0"
+            android:drawableLeft="@drawable/ic_up"
+            android:text="WEAVE UP" />
+
+    </GridLayout>
+
+</RelativeLayout>
